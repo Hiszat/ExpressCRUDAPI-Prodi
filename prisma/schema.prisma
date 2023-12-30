@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model events {
+  event_id                       Int       @id @default(autoincrement())
+  title                          String    @db.VarChar(50)
+  endof_registration             DateTime? @db.Timestamp(0)
+  location                       String    @db.VarChar(25)
+  description                    String    @db.Text
+  capacity                       Int
+  mentor_id                      Int?
+  image                          String    @db.VarChar(70)
+  status                         Boolean?
+  start_date                     DateTime  @default(now()) @db.Timestamp(0)
+  end_date                       DateTime? @db.Timestamp(0)
+  created_by                     Int
+  created_at                     DateTime  @default(now()) @db.Timestamp(0)
+  organizer                      String?   @db.VarChar(30)
+  users                          users?    @relation(fields: [mentor_id], references: [user_id], map: "events_ibfk_1")
+  users_events_created_byTousers users     @relation("events_created_byTousers", fields: [created_by], references: [user_id], onDelete: NoAction, map: "events_ibfk_2")
+  tiket                          tiket[]
+
+  @@index([mentor_id], map: "mentor_id")
+  @@index([created_by], map: "created_by")
+}
+
+model prodi {
+  prodi_id Int     @id
+  jurusan  String  @db.VarChar(25)
+  users    users[]
+}
+
+model role {
+  role_id Int     @id
+  role    String  @db.Char(6)
+  users   users[]
+}
+
+model session {
+  session_id    Int      @id @default(autoincrement())
+  user_id       Int
+  session_token String   @unique(map: "session_token") @db.VarChar(100)
+  expired_time  DateTime @default(now()) @db.Timestamp(0)
+  users         users    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, map: "session_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model tiket {
+  tiket_id          Int     @id @default(autoincrement())
+  event_id          Int?
+  user_id           Int?
+  attendance_status Boolean @default(false)
+  users             users?  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, map: "tiket_ibfk_1")
+  events            events? @relation(fields: [event_id], references: [event_id], map: "tiket_ibfk_2")
+
+  @@index([event_id], map: "event_id")
+  @@index([user_id], map: "user_id")
+}
+
+model users {
+  user_id                         Int       @id @default(autoincrement())
+  username                        String    @db.VarChar(50)
+  password                        String    @db.VarChar(120)
+  salt                            String?   @db.VarChar(8)
+  email                           String    @db.VarChar(30)
+  fullname                        String?   @db.VarChar(75)
+  birthdate                       DateTime? @db.Date
+  prodi_id                        Int?
+  role_id                         Int?
+  last_login                      DateTime? @db.Date
+  npm                             String?   @db.Char(8)
+  created_at                      DateTime  @default(now()) @db.Date
+  update_at                       DateTime  @default(now()) @db.Timestamp(0)
+  events                          events[]
+  events_events_created_byTousers events[]  @relation("events_created_byTousers")
+  session                         session[]
+  tiket                           tiket[]
+  prodi                           prodi?    @relation(fields: [prodi_id], references: [prodi_id], map: "users_ibfk_1")
+  role                            role?     @relation(fields: [role_id], references: [role_id], map: "users_ibfk_2")
+
+  @@index([prodi_id], map: "prodi_id")
+  @@index([role_id], map: "role_id")
+}
