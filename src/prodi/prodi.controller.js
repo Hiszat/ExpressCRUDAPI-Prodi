@@ -1,80 +1,53 @@
-const express = require("express");
-const router  = express.Router();
-const { getAllProdi, getProdiByID, createdProdi, deleteProdibyID, editProdiByID } = require("./prodi.service");
+const { findProdiByID, findAllProdi, delProdi, updateProdi, createPrody } = require("./prodi.repository");
 
-router.get("/", async (req, res) => {
-    try {
-        const prodi = await getAllProdi();
-        res.send(prodi);
-    } catch (error) {
-        res.status(400).send(error.message)
+const getAllProdi = async () => {
+    const prodi = await findAllProdi();
+    if (prodi.length === 0) {
+        throw new Error("Tidak ada data prodi yang ditemukan");
     }
-})
+    return prodi;
 
-router.get("/:id", async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const prodi = await getProdiByID(id);
-        res.send(prodi);
-    } catch (error) {
-        res.status(400).send(error.message)
+}
+
+const getProdiByID = async (id) => {
+    const prodi = await findProdiByID(id);
+    if(!prodi){
+        throw Error("Data not found");
     }
-    
-})
+    return prodi;
+}
 
-router.post("/", async (req, res) => {
-    try {
-        const dataProdi = req.body;
-       const id = parseInt(dataProdi.id);
-        if (isNaN(id)) {
-            return res.status(400).send("ID harus berupa angka");
-        }
-
-        if (dataProdi.jurusan === null) {
-            return res.status(400).send("Ada data yang kosong, harap isi terlebih dahulu!");
-        }
-
-        const prodi = await createdProdi(id, dataProdi.jurusan);
-
-        res.status(201).send({
-            data: prodi,
-            msg: "Data berhasil dimasukkan"
-        })
-    } catch (error) {
-        res.status(400).send(error.message)
+const createdProdi = async (dataProdi) => {
+    const {id, jurusan} = dataProdi;
+    if (isNaN(id)) {
+        return res.status(400).send("ID harus berupa angka");
     }
-})
-
-router.delete("/:id", async (req,res) => {
-    try {
-        const prodiID = req.params.id
-        await deleteProdibyID(prodiID);
-        res.send({msg: "Data berhasil dihapus"});
-    } catch (error) {
-        res.status(400).send(error.message)
+    if (jurusan === null) {
+        return res.status(400).send("Ada data yang kosong, harap isi terlebih dahulu!");
     }
-    
-})
+    const prodi = await createPrody(+id, jurusan);
+    return prodi;
+}
 
-router.patch("/:id", async (req,res) => {
-    try {
-        const prodiID = parseInt(req.params.id);
-        const prodiData = req.body;
+const deleteProdibyID = async (id) => {
+    const prodiID = Number(id);
+    await getProdiByID(prodiID);
+    await delProdi(prodiID);
+}
 
-        if(prodiData.jurusan !== null){
-            const prodi = await editProdiByID(prodiID, prodiData);
-            res.send({
-                data: prodi, 
-                msg: "Data berhasil diubah"
-            });
-        }else{
-            res.status(400).send("Kesalahan: Jurusan tidak boleh kosong (lu mau ngisi apa jir kalau jurusan nya kosong)");
-        }
-    } catch (error) {
-        res.status(400).send(error.message)
-    }
-    
-})
+const editProdiByID = async (id, prodiData) => {
+    await getProdiByID(id);
+    const {jurusan} = prodiData;
 
+    const prodi = await updateProdi(id, jurusan);
+    return prodi;
 
-module.exports = router;
+}
+
+module.exports = {
+    getAllProdi,
+    getProdiByID,
+    createdProdi,
+    deleteProdibyID,
+    editProdiByID
+}

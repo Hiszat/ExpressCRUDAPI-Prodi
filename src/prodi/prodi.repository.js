@@ -18,7 +18,7 @@ const findProdiByID = async (id) => {
     return prodi;
 }
 
-const createProdi = async (id, jurusan) => {
+const createPrody = async (id, jurusan) => {
     const prodi = await prisma.prodi.create({
         data: {
             prodi_id: id,
@@ -55,7 +55,7 @@ const updateProdi = async (id, jurusan) => {
 module.exports = {
     findAllProdi,
     findProdiByID,
-    createProdi,
+    createPrody,
     updateProdi,
     delProdi
 }
